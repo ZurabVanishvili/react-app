@@ -1,19 +1,30 @@
-import { useEffect, useState } from 'react';
-import './cartPage.css';
-import CartRow from '../CartRow';
+import { useEffect, useState, useMemo } from "react";
+import "./cartPage.css";
+import CartRow from "../CartRow";
+
+import { useContext } from "react";
+
+import CartContext from "../../contexts/cartContext";
 
 const CartPage = () => {
-  const [addedProducts, setAddedProducts] = useState({ data: [], loading: true });
+  const [addedProducts, setAddedProducts] = useState({
+    data: [],
+    loading: true,
+  });
+
+  const { cartItems } = useContext(CartContext);
 
   useEffect(() => {
-    fetch("http://localhost:3001/products").then(res => {
-      if (res.ok) return res.json();
-    }).then(res => {
-      const cartAssoc = JSON.parse(localStorage.getItem("cart")) || {};
-      const addedItems = res.filter(product => cartAssoc[product.id]);
-      setAddedProducts({ data: addedItems, loading: false });
-    });
-  }, [])
+    fetch("http://localhost:3001/products")
+      .then((res) => {
+        if (res.ok) return res.json();
+      })
+      .then((res) => {
+        const cartAssoc = JSON.parse(localStorage.getItem("cart")) || {};
+        const addedItems = res.filter((product) => cartAssoc[product.id]);
+        setAddedProducts({ data: addedItems, loading: false });
+      });
+  }, []);
 
   /* რეალურ პროექტში ყველა პროდუქტს არ მოვითხოვთ სერვერიდან,
   სერვერზე POST მეთოდით უნდა გაიგზავნოს პროდუქტების id - ბის მასივი და backend-სგან ვიღებთ ამ id - ბის შესაბამის პროდუქტების სიას.
@@ -22,23 +33,57 @@ const CartPage = () => {
 
   if (addedProducts.loading) return "...loading";
 
-  if (!addedProducts.data.length && !addedProducts.loading) return "No Items added";
+  if (!addedProducts.data.length && !addedProducts.loading) {
+    return "No Items added";
+  }
 
-  return <table>
-    <thead>
-      <tr>
-        <th></th>
-        <th>name</th>
-        <th>price</th>
-        <th>quantity</th>
-      </tr>
-    </thead>
-    <tbody>
-      {
-        addedProducts.data.map(product => <CartRow product={product} key={product.id} />)
+  function calculateTotalPrice(products, itemQuantities) {
+    const totalPrice = Object.keys(itemQuantities).reduce((acc, itemId) => {
+      const foundProduct = products.find(
+        (product) => product.id === parseInt(itemId)
+      );
+
+      if (foundProduct) {
+        const quantity = itemQuantities[itemId];
+        const price = foundProduct.price;
+        return acc + parseInt(quantity) * parseInt(price);
+      } else {
+        return acc;
       }
-    </tbody>
-  </table>;
-}
+    });
+    return totalPrice;
+  }
+
+  const totalPrice = calculateTotalPrice(addedProducts.data, cartItems);
+
+  console.log("Added products", addedProducts.data);
+  console.log("Cart Items: ", cartItems);
+
+  console.log(totalPrice);
+
+  return (
+    <>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>name</th>
+            <th>price</th>
+            <th>quantity</th>
+            <th>subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {addedProducts.data.map((product) => (
+            <CartRow product={product} key={product.id} />
+          ))}
+        </tbody>
+      </table>
+      <p>
+        <strong>Total: </strong>{" "}
+      </p>
+    </>
+  );
+};
 
 export default CartPage;
