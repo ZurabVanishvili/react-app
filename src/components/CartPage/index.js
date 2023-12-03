@@ -12,7 +12,9 @@ const CartPage = () => {
     loading: true,
   });
 
-  const { cartItems } = useContext(CartContext);
+  const { cartItems, setCartItems } = useContext(CartContext);
+
+  useEffect(() => console.log(cartItems), [cartItems]);
 
   useEffect(() => {
     fetch("http://localhost:3001/products")
@@ -50,16 +52,17 @@ const CartPage = () => {
       } else {
         return acc;
       }
-    });
+    }, 0);
     return totalPrice;
   }
 
   const totalPrice = calculateTotalPrice(addedProducts.data, cartItems);
 
-  console.log("Added products", addedProducts.data);
-  console.log("Cart Items: ", cartItems);
-
-  console.log(totalPrice);
+  function deleteProduct(id) {
+    console.log(cartItems[id]);
+    const { [id]: delKey, ...newObj } = cartItems;
+    setCartItems(newObj);
+  }
 
   return (
     <>
@@ -71,16 +74,21 @@ const CartPage = () => {
             <th>price</th>
             <th>quantity</th>
             <th>subtotal</th>
+            <th>action</th>
           </tr>
         </thead>
         <tbody>
           {addedProducts.data.map((product) => (
-            <CartRow product={product} key={product.id} />
+            <CartRow
+              product={product}
+              key={product.id}
+              deleteProduct={() => deleteProduct(product.id)}
+            />
           ))}
         </tbody>
       </table>
       <p>
-        <strong>Total: </strong>{" "}
+        <strong>Total: </strong> ${totalPrice}
       </p>
     </>
   );

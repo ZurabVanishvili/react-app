@@ -1,9 +1,9 @@
-const CartRow = ({ product }) => {
+const CartRow = ({ product, deleteProduct }) => {
   const { id, name, price, imgUrl } = product;
 
-  const quantity = +JSON.parse(localStorage.getItem("cart"))[product.id]
+  const quantity = +JSON.parse(localStorage.getItem("cart"))[product.id];
 
-  const subtotal = price * quantity
+  const subtotal = price * quantity;
 
   return (
     <tr key={`product-${id}`}>
@@ -14,6 +14,9 @@ const CartRow = ({ product }) => {
       <td>{price}</td>
       <td>{quantity}</td>
       <td>${subtotal}</td>
+      <td>
+        <button onClick={deleteProduct}>Delete</button>
+      </td>
     </tr>
   );
 };
